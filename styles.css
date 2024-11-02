@@ -1,0 +1,100 @@
+body {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#title {
+  text-align: center;
+}
+
+#title span {
+  font-size: 2rem;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.social-icons a {
+  display: inline-block;
+}
+
+.social-icons img {
+  width: 40px;
+  height: 40px;
+}
+
+#volume-control {
+  margin: 20px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#volume {
+  width: 300px; /* Set the desired length of the volume bar */
+  -webkit-appearance: none; /* Remove default styling for WebKit browsers */
+  background: #34495e; /* Background color of the slider track */
+  height: 8px; /* Height of the slider track */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Change cursor on hover */
+}
+
+#volume::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Remove default styling for the thumb */
+  appearance: none; /* Remove default styling for other browsers */
+  width: 20px; /* Width of the thumb */
+  height: 20px; /* Height of the thumb */
+  background: #ecf0f1; /* Color of the thumb */
+  border-radius: 50%; /* Rounded thumb */
+  cursor: pointer; /* Change cursor to pointer */
+}
+
+#volume::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ecf0f1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#time-display {
+  font-size: small; /* Make it smaller */
+  color: gray; /* Set the color to gray */
+  margin-top: 5px; /* Add a little spacing */
+}
+
+.time {
+  margin-top: 5px; /* Space above the time display */
+  font-size: 12px; /* Normal size for the time display */
+  letter-spacing: 1px; /* Space between letters */
+  font-family: Arial, sans-serif; /* Use a standard font */
+}
+
+#current-time {
+  font-size: 14px; /* Slightly larger for the current time */
+  font-weight: bold; /* Bold for emphasis */
+}
+
+#total-time {
+  font-size: 12px; /* Normal size for total time */
+  color: gray; /* Optional: Gray color for the total time */
+}
+
+#footer {
+  color: gray;
+  font-size: small;
+}
