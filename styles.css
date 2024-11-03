@@ -3,13 +3,13 @@ body {
   color: #ecf0f1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; /* Center content vertically */
   align-items: center;
   height: 100vh;
   margin: 0;
   font-family: Arial, sans-serif;
+  position: relative; /* Set position relative for the footer */
 }
-
 #title {
   text-align: center;
 }
@@ -34,41 +34,6 @@ body {
 .social-icons img {
   width: 40px;
   height: 40px;
-}
-
-#volume-control {
-  margin: 20px 0;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#volume {
-  width: 300px; /* Set the desired length of the volume bar */
-  -webkit-appearance: none; /* Remove default styling for WebKit browsers */
-  background: #34495e; /* Background color of the slider track */
-  height: 8px; /* Height of the slider track */
-  border-radius: 5px; /* Rounded corners */
-  cursor: pointer; /* Change cursor on hover */
-}
-
-#volume::-webkit-slider-thumb {
-  -webkit-appearance: none; /* Remove default styling for the thumb */
-  appearance: none; /* Remove default styling for other browsers */
-  width: 20px; /* Width of the thumb */
-  height: 20px; /* Height of the thumb */
-  background: #ecf0f1; /* Color of the thumb */
-  border-radius: 50%; /* Rounded thumb */
-  cursor: pointer; /* Change cursor to pointer */
-}
-
-#volume::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: #ecf0f1;
-  border-radius: 50%;
-  cursor: pointer;
 }
 
 #time-display {
@@ -98,7 +63,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 30px; /* Space between the buttons */
+  gap: 100px; /* Space between the buttons */
+  margin-top: 15px;
 }
 
 #audio-controls img {
@@ -113,7 +79,59 @@ body {
 }
 
 #footer {
+  position: absolute; /* Position footer absolutely */
+  bottom: 20px; /* Stick to the bottom */
+  width: 100%; /* Full width */
+  text-align: center; /* Center the text */
   color: gray;
   font-size: small;
-  margin-top: 20px; /* Increase margin between footer and buttons */
+}
+#time-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  width: 320px; /* Adjust to control the width */
+}
+
+#progress-bar {
+  width: 100%;
+  height: 10px; /* Adjust height as desired */
+  background-color: #34495e;
+  border-radius: 5px;
+  overflow: hidden;
+  appearance: none;
+}
+
+#progress-bar::-webkit-progress-bar {
+  background-color: #34495e;
+  border-radius: 5px;
+}
+
+#progress-bar::-webkit-progress-value {
+  background-color: #1abc9c;
+  border-radius: 5px;
+}
+
+#progress-bar::-moz-progress-bar {
+  background-color: #1abc9c;
+  border-radius: 5px;
+}
+
+.time {
+  margin-top: 15px; /* Add spacing below the progress bar */
+  font-size: 12px;
+  letter-spacing: 1px;
+  font-family: Arial, sans-serif;
+  color: #ecf0f1;
+}
+
+#current-time {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#total-time {
+  font-size: 12px;
+  color: gray;
 }

@@ -1,21 +1,24 @@
 const audio = document.getElementById("background-audio");
-const volumeControl = document.getElementById("volume");
 const currentTimeDisplay = document.getElementById("current-time");
 const totalTimeDisplay = document.getElementById("total-time");
 const playPauseButton = document.getElementById("play-pause-button");
-const prevButton = document.getElementById("play-pause-button");
-const nextButton = document.getElementById("play-pause-button");
+const prevButton = document.getElementById("prev-button");
+const nextButton = document.getElementById("next-button");
+const progressBar = document.getElementById("progress-bar");
 
 const playlist = [
-  "assets/audio/end-up-gone.mp3", // Track 1
-  "assets/audio/magic-johnson.mp3", // Track 2
+  "assets/audio/end-up-gone.mp3",
+  "assets/audio/magic-johnson.mp3",
   "assets/audio/never-stop.mp3",
 ];
 
 let currentTrackIndex = 0;
 
-// Set initial volume based on slider value
-audio.volume = volumeControl.value;
+// Set initial volume to a specific value (e.g., 0.5)
+audio.volume = 0.5;
+
+// Display play button on startup
+playPauseButton.src = "assets/images/play.png";
 
 // Function to format time in minutes:seconds
 function formatTime(seconds) {
@@ -29,16 +32,16 @@ function playAudio() {
   audio.play().catch((error) => {
     console.log("Playback prevented:", error);
   });
-  updateTotalTime();
-  startTimeUpdate(); // Start updating time display
-  playPauseButton.src = "assets/images/playpause.png"; // Update button image to pause
+  playPauseButton.src = "assets/images/pause.png"; // Update button image to pause
 }
 
+// Function to pause audio
 function pauseAudio() {
   audio.pause();
-  playPauseButton.src = "assets/images/playpause.png";
+  playPauseButton.src = "assets/images/play.png"; // Update button image to play
 }
 
+// Function to handle play/pause
 function handlePlayPause() {
   if (audio.paused) {
     playAudio();
@@ -47,52 +50,63 @@ function handlePlayPause() {
   }
 }
 
-// Function to handle volume change
-function handleVolumeChange(event) {
-  audio.volume = event.target.value;
-}
-
 // Function to update the total time display
 function updateTotalTime() {
-  audio.addEventListener("loadedmetadata", () => {
-    totalTimeDisplay.textContent = formatTime(audio.duration);
-  });
+  totalTimeDisplay.textContent = formatTime(audio.duration);
 }
 
-// Function to start updating current time
-function startTimeUpdate() {
-  setInterval(() => {
-    if (!audio.paused) {
-      currentTimeDisplay.textContent = formatTime(audio.currentTime);
-    }
-  }, 1000); // Update every second
+// Function to update the progress bar as the audio plays
+function updateProgressBar() {
+  const progress = (audio.currentTime / audio.duration) * 100;
+  progressBar.value = progress || 0; // Set to 0 if NaN (e.g., before metadata loads)
+  currentTimeDisplay.textContent = formatTime(audio.currentTime);
 }
 
+// Function to seek within the audio when clicking on the progress bar
+function seekAudio(event) {
+  const clickPosition = event.offsetX / progressBar.offsetWidth;
+  audio.currentTime = clickPosition * audio.duration;
+}
+
+// Function to load a specific track
 function loadTrack(index) {
   currentTrackIndex = index;
   audio.src = playlist[currentTrackIndex];
   audio.load();
-  playAudio();
+  audio.addEventListener("loadedmetadata", () => {
+    updateTotalTime();
+    currentTimeDisplay.textContent = "0:00"; // Reset current time display
+  });
 }
 
+// Function to play the next track
 function playNext() {
   currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
   loadTrack(currentTrackIndex);
+  playAudio();
 }
 
+// Function to play the previous track
 function playPrevious() {
   currentTrackIndex =
     (currentTrackIndex - 1 + playlist.length) % playlist.length;
   loadTrack(currentTrackIndex);
+  playAudio();
 }
 
-// Add event listener to the volume control
-volumeControl.addEventListener("input", handleVolumeChange);
-
-// Add event listeners to the play/pause, previous and next buttons
+// Event listeners for play/pause, previous, and next buttons
 playPauseButton.addEventListener("click", handlePlayPause);
 prevButton.addEventListener("click", playPrevious);
 nextButton.addEventListener("click", playNext);
 
-// Add event listener to the document to play audio on any click
-document.addEventListener("click", playAudio);
+// Event listener to update progress bar as the audio plays
+audio.addEventListener("timeupdate", updateProgressBar);
+
+// Event listener to seek audio when clicking on the progress bar
+progressBar.addEventListener("click", seekAudio);
+
+// Event listener for when the audio track ends
+audio.addEventListener("ended", playNext);
+
+// Start the first track when the page loads
+loadTrack(currentTrackIndex);

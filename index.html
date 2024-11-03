@@ -34,26 +34,20 @@
     </div>
 
     <audio id="background-audio" loop>
-      <source src="assets/audio/background-music.mp3" type="audio/mpeg" />
+      <source src="assets/audio/end-up-gone.mp3" type="audio/mpeg" />
       Your browser does not support the audio element.
     </audio>
 
-    <div id="volume-control">
-      <input type="range" id="volume" min="0" max="1" step="0.01" value="0" />
-      <span class="time">
-        <span id="current-time">0:00</span>
-        / <span id="total-time">1:04</span>
-      </span>
+    <div id="time-control">
+      <progress id="progress-bar" value="0" max="100"></progress>
+      <div class="time">
+        <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
+      </div>
     </div>
-
     <!-- Controls for audio playback -->
     <div id="audio-controls">
       <img id="prev-button" src="assets/images/previous.png" alt="Previous" />
-      <img
-        id="play-pause-button"
-        src="assets/images/playpause.png"
-        alt="Play"
-      />
+      <img id="play-pause-button" src="assets/images/play.png" alt="Play" />
       <img id="next-button" src="assets/images/next.png" alt="Next" />
     </div>
 
