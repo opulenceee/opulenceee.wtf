@@ -29,9 +29,14 @@ function formatTime(seconds) {
 
 // Function to play audio
 function playAudio() {
-  audio.play().catch((error) => {
-    console.log("Playback prevented:", error);
-  });
+  audio
+    .play()
+    .then(() => {
+      console.log("Audio is playing");
+    })
+    .catch((error) => {
+      console.log("Playback prevented:", error);
+    });
   playPauseButton.src = "assets/images/pause.png"; // Update button image to pause
 }
 
@@ -60,6 +65,11 @@ function updateProgressBar() {
   const progress = (audio.currentTime / audio.duration) * 100;
   progressBar.value = progress || 0; // Set to 0 if NaN (e.g., before metadata loads)
   currentTimeDisplay.textContent = formatTime(audio.currentTime);
+
+  // Check if the current time is equal to the total duration
+  if (audio.currentTime >= audio.duration) {
+    playNext(); // Play the next track if the current track ends
+  }
 }
 
 // Function to seek within the audio when clicking on the progress bar
@@ -73,6 +83,8 @@ function loadTrack(index) {
   currentTrackIndex = index;
   audio.src = playlist[currentTrackIndex];
   audio.load();
+
+  // Reset current time display and total time display
   audio.addEventListener("loadedmetadata", () => {
     updateTotalTime();
     currentTimeDisplay.textContent = "0:00"; // Reset current time display
@@ -81,6 +93,7 @@ function loadTrack(index) {
 
 // Function to play the next track
 function playNext() {
+  console.log("Playing next track...");
   currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
   loadTrack(currentTrackIndex);
   playAudio();
@@ -104,9 +117,6 @@ audio.addEventListener("timeupdate", updateProgressBar);
 
 // Event listener to seek audio when clicking on the progress bar
 progressBar.addEventListener("click", seekAudio);
-
-// Event listener for when the audio track ends
-audio.addEventListener("ended", playNext);
 
 // Start the first track when the page loads
 loadTrack(currentTrackIndex);
