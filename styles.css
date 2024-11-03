@@ -36,6 +36,10 @@ body {
   height: 40px;
 }
 
+.social-icons img:hover {
+  transform: scale(1.3); /* Scale up on hover */
+}
+
 #time-display {
   font-size: small; /* Make it smaller */
   color: gray; /* Set the color to gray */
