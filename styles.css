@@ -94,7 +94,26 @@ body {
   color: gray; /* Optional: Gray color for the total time */
 }
 
+#audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px; /* Space between the buttons */
+}
+
+#audio-controls img {
+  width: 30px; /* Adjust the size of the images to 40px */
+  height: 30px; /* Maintain aspect ratio */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: transform 0.2s; /* Smooth transition for hover effect */
+}
+
+#audio-controls img:hover {
+  transform: scale(1.1); /* Scale up on hover */
+}
+
 #footer {
   color: gray;
   font-size: small;
+  margin-top: 20px; /* Increase margin between footer and buttons */
 }
