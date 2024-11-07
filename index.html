@@ -7,8 +7,12 @@
     <title>opulence.wtf</title>
     <link rel="icon" href="/assets/images/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/images/favicon.png" />
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   </head>
   <body>
+    <!-- Particles background -->
+    <div id="particles-js"></div>
+
     <div id="title">
       <span>opulenceee.</span>
       <div class="social-icons">
@@ -37,13 +41,14 @@
       <source src="assets/audio/end-up-gone.mp3" type="audio/mpeg" />
       Your browser does not support the audio element.
     </audio>
+
     <div id="time-control">
       <progress id="progress-bar" value="0" max="100"></progress>
       <div class="time">
         <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
       </div>
     </div>
-    <!-- Controls for audio playback -->
+
     <div id="audio-controls">
       <img id="prev-button" src="assets/images/previous.png" alt="Previous" />
       <img id="play-pause-button" src="assets/images/play.png" alt="Play" />
@@ -51,6 +56,9 @@
     </div>
 
     <footer id="footer">Copyright © 2024, opulenceee.</footer>
+
+    <!-- Scripts -->
+    <script src="particles-config.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
