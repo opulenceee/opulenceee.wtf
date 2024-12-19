@@ -1,122 +1,184 @@
-const audio = document.getElementById("background-audio");
-const currentTimeDisplay = document.getElementById("current-time");
-const totalTimeDisplay = document.getElementById("total-time");
-const playPauseButton = document.getElementById("play-pause-button");
-const prevButton = document.getElementById("prev-button");
-const nextButton = document.getElementById("next-button");
-const progressBar = document.getElementById("progress-bar");
+class AudioPlayer {
+  constructor(config) {
+    this.audio = document.getElementById("background-audio");
+    this.currentTimeDisplay = document.getElementById("current-time");
+    this.totalTimeDisplay = document.getElementById("total-time");
+    this.playPauseButton = document.getElementById("play-pause-button");
+    this.prevButton = document.getElementById("prev-button");
+    this.nextButton = document.getElementById("next-button");
+    this.progressBar = document.getElementById("progress-bar");
+    this.volumeSlider = document.getElementById("volume-slider");
 
-const playlist = [
-  "assets/audio/end-up-gone.mp3",
-  "assets/audio/magic-johnson.mp3",
-  "assets/audio/never-stop.mp3",
-];
+    this.playlist = config.playlist;
+    this.currentTrackIndex = 0;
 
-let currentTrackIndex = 0;
+    this.initializePlayer();
+    this.setupEventListeners();
+  }
 
-// Set initial volume to a specific value (e.g., 0.5)
-audio.volume = 0.5;
+  initializePlayer() {
+    // Set initial volume
+    this.audio.volume = CONFIG.defaultVolume;
+    this.volumeSlider.value = CONFIG.defaultVolume * 100;
 
-// Display play button on startup
-playPauseButton.src = "assets/images/play.png";
+    // Set initial button state
+    this.updatePlayPauseButton();
 
-// Function to format time in minutes:seconds
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
-}
+    // Load first track
+    this.loadTrack(this.currentTrackIndex);
+  }
 
-// Function to play audio
-function playAudio() {
-  audio
-    .play()
-    .then(() => {
-      console.log("Audio is playing");
-    })
-    .catch((error) => {
-      console.log("Playback prevented:", error);
+  setupEventListeners() {
+    // Playback controls
+    this.playPauseButton.addEventListener("click", () =>
+      this.handlePlayPause()
+    );
+    this.prevButton.addEventListener("click", () => this.playPrevious());
+    this.nextButton.addEventListener("click", () => this.playNext());
+
+    // Progress bar
+    this.progressBar.addEventListener("click", (e) => this.seekAudio(e));
+    this.audio.addEventListener("timeupdate", () => this.updateProgressBar());
+
+    // Volume control
+    this.volumeSlider.addEventListener("input", (e) => {
+      this.audio.volume = e.target.value / 100;
     });
-  playPauseButton.src = "assets/images/pause.png"; // Update button image to pause
-}
 
-// Function to pause audio
-function pauseAudio() {
-  audio.pause();
-  playPauseButton.src = "assets/images/play.png"; // Update button image to play
-}
+    // Keyboard controls
+    document.addEventListener("keydown", (e) => this.handleKeyboard(e));
 
-// Function to handle play/pause
-function handlePlayPause() {
-  if (audio.paused) {
-    playAudio();
-  } else {
-    pauseAudio();
+    // Track ended
+    this.audio.addEventListener("ended", () => this.playNext());
+
+    // Error handling
+    this.audio.addEventListener("error", (e) => this.handleError(e));
+
+    // Metadata loaded
+    this.audio.addEventListener("loadedmetadata", () => {
+      this.updateTotalTime();
+    });
+  }
+
+  handleKeyboard(event) {
+    switch (event.code) {
+      case "Space":
+        event.preventDefault();
+        this.handlePlayPause();
+        break;
+      case "ArrowLeft":
+        event.preventDefault();
+        this.playPrevious();
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        this.playNext();
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        this.adjustVolume(0.1);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        this.adjustVolume(-0.1);
+        break;
+    }
+  }
+
+  adjustVolume(delta) {
+    const newVolume = Math.max(0, Math.min(1, this.audio.volume + delta));
+    this.audio.volume = newVolume;
+    this.volumeSlider.value = newVolume * 100;
+  }
+
+  formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
+  }
+
+  updatePlayPauseButton() {
+    const img = this.playPauseButton.querySelector("img");
+    img.src = this.audio.paused
+      ? "assets/images/play.png"
+      : "assets/images/pause.png";
+  }
+
+  handlePlayPause() {
+    if (this.audio.paused) {
+      this.audio.play().catch((error) => {
+        console.error("Error playing audio:", error);
+      });
+    } else {
+      this.audio.pause();
+    }
+    this.updatePlayPauseButton();
+  }
+
+  loadTrack(index) {
+    this.currentTrackIndex = index;
+    this.audio.src = this.playlist[index].url;
+    this.audio.load();
+
+    // Reset displays
+    this.currentTimeDisplay.textContent = "0:00";
+    this.progressBar.value = 0;
+
+    // Update button state
+    this.updatePlayPauseButton();
+  }
+
+  playNext() {
+    this.currentTrackIndex =
+      (this.currentTrackIndex + 1) % this.playlist.length;
+    this.loadTrack(this.currentTrackIndex);
+    this.audio.play().catch((error) => {
+      console.error("Error playing next track:", error);
+    });
+  }
+
+  playPrevious() {
+    this.currentTrackIndex =
+      (this.currentTrackIndex - 1 + this.playlist.length) %
+      this.playlist.length;
+    this.loadTrack(this.currentTrackIndex);
+    this.audio.play().catch((error) => {
+      console.error("Error playing previous track:", error);
+    });
+  }
+
+  seekAudio(event) {
+    const clickPosition = event.offsetX / this.progressBar.offsetWidth;
+    const newTime = clickPosition * this.audio.duration;
+    if (!isNaN(newTime)) {
+      this.audio.currentTime = newTime;
+      this.updateProgressBar();
+    }
+  }
+
+  updateProgressBar() {
+    if (!isNaN(this.audio.duration)) {
+      const progress = (this.audio.currentTime / this.audio.duration) * 100;
+      this.progressBar.value = progress;
+      this.currentTimeDisplay.textContent = this.formatTime(
+        this.audio.currentTime
+      );
+    }
+  }
+
+  updateTotalTime() {
+    if (!isNaN(this.audio.duration)) {
+      this.totalTimeDisplay.textContent = this.formatTime(this.audio.duration);
+    }
+  }
+
+  handleError(error) {
+    console.error("Audio error:", error);
+    // Optionally add user-facing error handling here
   }
 }
 
-// Function to update the total time display
-function updateTotalTime() {
-  totalTimeDisplay.textContent = formatTime(audio.duration);
-}
-
-// Function to update the progress bar as the audio plays
-function updateProgressBar() {
-  const progress = (audio.currentTime / audio.duration) * 100;
-  progressBar.value = progress || 0; // Set to 0 if NaN (e.g., before metadata loads)
-  currentTimeDisplay.textContent = formatTime(audio.currentTime);
-
-  // Check if the current time is equal to the total duration
-  if (audio.currentTime >= audio.duration) {
-    playNext(); // Play the next track if the current track ends
-  }
-}
-
-// Function to seek within the audio when clicking on the progress bar
-function seekAudio(event) {
-  const clickPosition = event.offsetX / progressBar.offsetWidth;
-  audio.currentTime = clickPosition * audio.duration;
-}
-
-// Function to load a specific track
-function loadTrack(index) {
-  currentTrackIndex = index;
-  audio.src = playlist[currentTrackIndex];
-  audio.load();
-
-  // Reset current time display and total time display
-  audio.addEventListener("loadedmetadata", () => {
-    updateTotalTime();
-    currentTimeDisplay.textContent = "0:00"; // Reset current time display
-  });
-}
-
-// Function to play the next track
-function playNext() {
-  console.log("Playing next track...");
-  currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-  loadTrack(currentTrackIndex);
-  playAudio();
-}
-
-// Function to play the previous track
-function playPrevious() {
-  currentTrackIndex =
-    (currentTrackIndex - 1 + playlist.length) % playlist.length;
-  loadTrack(currentTrackIndex);
-  playAudio();
-}
-
-// Event listeners for play/pause, previous, and next buttons
-playPauseButton.addEventListener("click", handlePlayPause);
-prevButton.addEventListener("click", playPrevious);
-nextButton.addEventListener("click", playNext);
-
-// Event listener to update progress bar as the audio plays
-audio.addEventListener("timeupdate", updateProgressBar);
-
-// Event listener to seek audio when clicking on the progress bar
-progressBar.addEventListener("click", seekAudio);
-
-// Start the first track when the page loads
-loadTrack(currentTrackIndex);
+// Initialize the audio player when the DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  const player = new AudioPlayer(CONFIG);
+});
