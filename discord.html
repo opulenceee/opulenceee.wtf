@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="opulence.wtf - Discord Bots Showcase" />
+    <title>Discord Bots - opulence.wtf</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="discord.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/assets/images/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/images/favicon.png" />
+
+    <!-- Preload font -->
+    <link
+      rel="preload"
+      href="assets/fonts/JetBrainsMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Particles.js -->
+    <script
+      src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"
+      defer
+    ></script>
+  </head>
+  <body>
+    <!-- Background -->
+    <div id="particles-js" class="particles-container"></div>
+
+    <!-- Private Bot Modal -->
+    <div
+      id="privateModal"
+      class="modal"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-content">
+        <h3 id="modalTitle">Private Repository</h3>
+        <p id="modalDescription"></p>
+        <button
+          class="close-modal"
+          onclick="closeModal()"
+          aria-label="Close modal"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+
+    <!-- Skip to main content link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Header -->
+    <header id="title">
+      <span>Discord Bots</span>
+      <div class="social-icons">
+        <a
+          href="https://buymeacoffee.com/opulenceee"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="assets/images/buymeacoffe.png"
+            alt="Buy Me A Coffee"
+            loading="lazy"
+          />
+        </a>
+        <a
+          href="https://www.youtube.com/@opulenceee"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube Channel (opens in new tab)"
+        >
+          <img src="assets/images/youtube.png" alt="" loading="lazy" />
+        </a>
+        <a
+          href="https://discordapp.com/users/220880488875687936"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Discord Profile (opens in new tab)"
+        >
+          <img src="assets/images/discord.png" alt="" loading="lazy" />
+        </a>
+        <a
+          href="https://steamcommunity.com/profiles/76561198097792367/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Steam Profile (opens in new tab)"
+        >
+          <img src="assets/images/steam.png" alt="" loading="lazy" />
+        </a>
+        <a
+          href="https://github.com/opulenceee"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub Profile (opens in new tab)"
+        >
+          <img src="assets/images/github.png" alt="" loading="lazy" />
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="bot-showcase">
+      <a href="index.html" class="back-link">← Back to Home</a>
+
+      <!-- Eleve Bot Card -->
+      <article class="bot-card">
+        <h2>Eleve Discord Bot</h2>
+        <p>
+          A specialized Discord bot designed for job scheduling and management.
+          It allows administrators to create, edit, and manage job listings
+          while members can easily respond to job availability through
+          reactions.
+        </p>
+        <ul class="bot-features" aria-label="Bot features">
+          <li>
+            Job creation and management with date, time, and location tracking
+          </li>
+          <li>
+            Interactive response system using reactions (Accept ✅, Decline ❌,
+            Tentative ❓)
+          </li>
+          <li>Paginated job listing view with easy navigation</li>
+          <li>Administrative controls for job editing and deletion</li>
+        </ul>
+        <div class="bot-links">
+          <button class="private-link" onclick="showPrivateModal('Eleve Bot')">
+            Add to Server
+          </button>
+          <button class="private-link" onclick="showPrivateModal('Eleve Bot')">
+            View Repository
+          </button>
+        </div>
+      </article>
+
+      <!-- LS-RP Bot Card -->
+      <article class="bot-card">
+        <h2>LS-RP Discord Bot</h2>
+        <p>
+          This bot tracks logged-in players, shows online admins and testers,
+          and allows status checks via Discord commands. You can also monitor
+          your faction thread with the bot.
+        </p>
+        <ul class="bot-features" aria-label="Bot features">
+          <li>Real-time player tracking and server status monitoring</li>
+          <li>Online admin and tester visibility</li>
+          <li>Faction thread monitoring system</li>
+          <li>Simple Discord command interface for status checks</li>
+        </ul>
+        <div class="bot-links">
+          <button class="private-link" onclick="showPrivateModal('LS-RP Bot')">
+            Add to Server
+          </button>
+          <button class="private-link" onclick="showPrivateModal('LS-RP Bot')">
+            View Repository
+          </button>
+        </div>
+      </article>
+
+      <!-- NR-RP Ticket Bot Card -->
+      <article class="bot-card">
+        <h2>NR-RP Ticket Bot</h2>
+        <p>
+          A comprehensive ticket management system for New Rotterdam Roleplay.
+          This bot handles user support requests through various categories,
+          manages staff responses, and maintains detailed ticket records.
+        </p>
+        <ul class="bot-features" aria-label="Bot features">
+          <li>
+            Four support categories with role-based access (General, Premium,
+            Account Recovery, Management)
+          </li>
+          <li>Staff ticket claiming system with notification management</li>
+          <li>Automatic HTML transcript generation and archiving</li>
+          <li>
+            Advanced user and staff interfaces with embeds and modal forms
+          </li>
+        </ul>
+        <div class="bot-links">
+          <button class="private-link" onclick="showPrivateModal('NR-RP Bot')">
+            Add to Server
+          </button>
+          <button class="private-link" onclick="showPrivateModal('NR-RP Bot')">
+            View Repository
+          </button>
+        </div>
+      </article>
+
+      <!-- LS-NIGHTS Role Bot Card -->
+      <article class="bot-card">
+        <h2>LS-NIGHTS Role Bot</h2>
+        <p>
+          A streamlined role management system for Discord servers. This bot
+          enables users to self-assign roles through an intuitive emoji reaction
+          system, making server role management effortless and user-friendly.
+        </p>
+        <ul class="bot-features" aria-label="Bot features">
+          <li>
+            Self-service role assignment system with emoji reactions (VIP,
+            Auction Winners, Member, and More Pings roles)
+          </li>
+          <li>Automated role verification and error handling system</li>
+          <li>Clean embedded message interface for role selection</li>
+          <li>
+            Real-time role updates with add/remove functionality through
+            reactions
+          </li>
+        </ul>
+        <div class="bot-links">
+          <button
+            class="private-link"
+            onclick="showPrivateModal('LS-NIGHTS Bot')"
+          >
+            Add to Server
+          </button>
+          <button
+            class="private-link"
+            onclick="showPrivateModal('LS-NIGHTS Bot')"
+          >
+            View Repository
+          </button>
+        </div>
+      </article>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <p>Copyright © 2024, opulenceee.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="particles-config.js" defer></script>
+    <script src="discord.js" defer></script>
+  </body>
+</html>
