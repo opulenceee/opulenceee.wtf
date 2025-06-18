@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Faction Management System - opulence.wtf"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="faction-manager.css" />
+    <title>Faction Manager - opulence.wtf</title>
+    <link rel="icon" href="/assets/images/favicon.png" type="image/png" />
+
+    <!-- Preload critical assets -->
+    <link
+      rel="preload"
+      href="assets/fonts/JetBrainsMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Particles.js -->
+    <script
+      src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"
+      defer
+    ></script>
+
+    <!-- SQL.js for client-side database -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  </head>
+  <body>
+    <!-- Particles background -->
+    <div id="particles-js" class="particles-container"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+      <div class="login-box">
+        <h1>🔒 Faction Access</h1>
+        <form id="login-form">
+          <input
+            type="password"
+            id="password-input"
+            placeholder="Enter faction password..."
+            required
+          />
+          <button type="submit">Access System</button>
+        </form>
+        <div id="login-error" class="error-message"></div>
+      </div>
+    </div>
+
+    <!-- Main Application (hidden by default) -->
+    <div id="main-app" class="hidden">
+      <!-- Header -->
+      <header class="app-header">
+        <h1>Faction Management System</h1>
+        <nav class="app-nav">
+          <button class="nav-btn active" data-section="warehouse">
+            📦 Warehouse
+          </button>
+          <button class="nav-btn" data-section="distribution">
+            📊 Distribution
+          </button>
+          <button class="nav-btn" data-section="statistics">
+            📈 Statistics
+          </button>
+          <button class="nav-btn" data-section="database">🗄️ Database</button>
+        </nav>
+        <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+      </header>
+
+      <!-- Warehouse Section -->
+      <section id="warehouse-section" class="app-section active">
+        <div class="section-header">
+          <h2>📦 Warehouse Management</h2>
+          <div class="quick-stats">
+            <div class="stat-card">
+              <span class="stat-label">Total Guns</span>
+              <span class="stat-value" id="total-guns">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Total Value</span>
+              <span class="stat-value" id="total-value">$0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Add Form -->
+        <div class="quick-add-form">
+          <h3>📥 Log Warehouse Withdrawal</h3>
+          <form id="withdrawal-form">
+            <div class="form-row">
+              <select id="gun-type" required>
+                <option value="">Select Gun Type</option>
+                <option value="Deagle">Deagle (85 Ammo)</option>
+                <option value="Colt">Colt (155 Ammo)</option>
+                <option value="Shotgun">Shotgun (55 Ammo)</option>
+                <option value="Sdpistol">Sdpistol (105 Ammo)</option>
+                <option value="Mac10">Mac10 (155 Ammo)</option>
+                <option value="Tec9">Tec9 (155 Ammo)</option>
+                <option value="Rifle">Rifle (105 Ammo)</option>
+                <option value="MP5">MP5 (155 Ammo)</option>
+                <option value="M4">M4 (150 Ammo)</option>
+                <option value="AK47">AK47 (150 Ammo)</option>
+                <option value="Other">Other</option>
+              </select>
+              <input
+                type="number"
+                id="gun-quantity"
+                placeholder="Quantity"
+                min="1"
+                required
+              />
+            </div>
+            <div class="form-row">
+              <input
+                type="text"
+                id="withdrawal-notes"
+                placeholder="Notes (optional)"
+              />
+              <button type="submit">📥 Log Withdrawal</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Recent Withdrawals -->
+        <div class="recent-activity">
+          <h3>📋 Recent Withdrawals</h3>
+          <div id="withdrawal-log" class="activity-log"></div>
+        </div>
+      </section>
+
+      <!-- Distribution Section -->
+      <section id="distribution-section" class="app-section">
+        <div class="section-header">
+          <h2>📊 Distribution Tracking</h2>
+        </div>
+
+        <!-- Distribution Form -->
+        <div class="distribution-form">
+          <h3>🎯 Log Distribution</h3>
+          <form id="distribution-form">
+            <div class="form-row">
+              <select id="member-name" required>
+                <option value="">Select Member</option>
+                <!-- Administration -->
+                <optgroup label="👑 Administration">
+                  <option value="Frank Baldi">
+                    Frank Baldi (Stephen_Molfetta) - Boss
+                  </option>
+                  <option value="Anthony Ulino">
+                    Anthony Ulino (Anthony_Ulino) - Underboss
+                  </option>
+                  <option value="Arnold Guarna">
+                    Arnold Guarna (Tracksuit Assassin) - Consigliere
+                  </option>
+                  <option value="James Delutro">
+                    James Delutro (Stephen_Molfetta) - Street Boss
+                  </option>
+                  <option value="Adam Mora">
+                    Adam Mora (Adam_Mora) - Captain
+                  </option>
+                  <option value="Christopher Tessaro">
+                    Christopher Tessaro (Cal) - Captain
+                  </option>
+                  <option value="Joseph Camisa">
+                    Joseph Camisa (Joseph_Camisa) - Soldier
+                  </option>
+                  <option value="Phil Arditi">
+                    Phil Arditi (Juwan) - Soldier
+                  </option>
+                  <option value="Henry Scaviolla">
+                    Henry Scaviolla (Henry_Scaviola) - Soldier
+                  </option>
+                  <option value="Arthur Crea">
+                    Arthur Crea (Unlawfulact) - Soldier
+                  </option>
+                </optgroup>
+                <!-- Associates -->
+                <optgroup label="🤝 Associates">
+                  <option value="Michael DeRossa">
+                    Michael DeRossa (Kalham)
+                  </option>
+                  <option value="Frank Malvezzi">
+                    Frank Malvezzi (S3condSon)
+                  </option>
+                  <option value="Henry Graziani">
+                    Henry Graziani (Luhdoodle)
+                  </option>
+                  <option value="Cameron Fllemming">
+                    Cameron Fllemming (Fllemming)
+                  </option>
+                  <option value="Raymond Fllemming">
+                    Raymond Fllemming (raimond9990)
+                  </option>
+                  <option value="Rondall Simmons">
+                    Rondall Simmons (The Real & Unreal)
+                  </option>
+                  <option value="Carmen Romano">
+                    Carmen Romano (Cocaine Caliphate)
+                  </option>
+                  <option value="Matthew Juliano">
+                    Matthew Juliano (Chicken Bargain)
+                  </option>
+                  <option value="Benjamin Galante">
+                    Benjamin Galante (7ayden)
+                  </option>
+                  <option value="Nicollo Fibonacci">
+                    Nicollo Fibonacci (Nicky)
+                  </option>
+                  <option value="Anthony Chiappetta">
+                    Anthony Chiappetta (BK-99)
+                  </option>
+                  <option value="Anthony Cavano">
+                    Anthony Cavano (Pavkela)
+                  </option>
+                  <option value="Anthony Scifaretti">
+                    Anthony Scifaretti (UncleW3it)
+                  </option>
+                  <option value="Vincent Franzone">
+                    Vincent Franzone (Pizzaman)
+                  </option>
+                  <option value="Richard Cicero">
+                    Richard Cicero (Cellophane)
+                  </option>
+                  <option value="Nicholas Cicero">
+                    Nicholas Cicero (Mrmardy)
+                  </option>
+                  <option value="Dante Muscato">Dante Muscato (Capo)</option>
+                  <option value="Vahan Kalajian">
+                    Vahan Kalajian (Tradition Keeper)
+                  </option>
+                  <option value="Jack Santavicca">
+                    Jack Santavicca (theyneedtoolie)
+                  </option>
+                  <option value="Jay Mezzasalma">Jay Mezzasalma (Yagi)</option>
+                  <option value="Nicholas Daza">
+                    Nicholas Daza (Killerfist)
+                  </option>
+                  <option value="Gerald Benfante">
+                    Gerald Benfante (Tracksuit Assassin)
+                  </option>
+                  <option value="Charles Iafelice">
+                    Charles Iafelice (Anthony_Ulino)
+                  </option>
+                </optgroup>
+                <!-- Custom Entry -->
+                <optgroup label="➕ Other">
+                  <option value="custom">Custom Member (type below)</option>
+                </optgroup>
+              </select>
+              <input
+                type="text"
+                id="custom-member-name"
+                placeholder="Custom member name"
+                style="display: none"
+              />
+              <select id="dist-gun-type" required>
+                <option value="">Select Gun Type</option>
+                <option value="Deagle">Deagle (85 Ammo)</option>
+                <option value="Colt">Colt (155 Ammo)</option>
+                <option value="Shotgun">Shotgun (55 Ammo)</option>
+                <option value="Sdpistol">Sdpistol (105 Ammo)</option>
+                <option value="Mac10">Mac10 (155 Ammo)</option>
+                <option value="Tec9">Tec9 (155 Ammo)</option>
+                <option value="Rifle">Rifle (105 Ammo)</option>
+                <option value="MP5">MP5 (155 Ammo)</option>
+                <option value="M4">M4 (150 Ammo)</option>
+                <option value="AK47">AK47 (150 Ammo)</option>
+                <option value="Other">Other</option>
+              </select>
+              <input
+                type="number"
+                id="dist-quantity"
+                placeholder="Quantity"
+                min="1"
+                required
+              />
+            </div>
+            <div class="form-row">
+              <input
+                type="text"
+                id="dist-notes"
+                placeholder="Notes (optional)"
+              />
+              <button type="submit">📊 Log Distribution</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Distribution Log -->
+        <div class="recent-activity">
+          <h3>📋 Distribution History</h3>
+          <div id="distribution-log" class="activity-log"></div>
+        </div>
+      </section>
+
+      <!-- Statistics Section -->
+      <section id="statistics-section" class="app-section">
+        <div class="section-header">
+          <h2>📈 Faction Statistics</h2>
+          <div class="quick-stats">
+            <div class="stat-card">
+              <span class="stat-label">This Month</span>
+              <span class="stat-value" id="monthly-total">0 guns</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Top Member</span>
+              <span class="stat-value" id="top-member">-</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Most Popular</span>
+              <span class="stat-value" id="top-weapon">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Overview -->
+        <div class="stats-overview">
+          <h3>📊 Monthly Overview</h3>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <h4>🏆 Top Recipients This Month</h4>
+              <div id="top-recipients" class="stat-list"></div>
+            </div>
+            <div class="stat-box">
+              <h4>🔫 Most Distributed Weapons</h4>
+              <div id="top-weapons" class="stat-list"></div>
+            </div>
+            <div class="stat-box">
+              <h4>📦 Warehouse Activity</h4>
+              <div id="warehouse-stats" class="stat-list"></div>
+            </div>
+            <div class="stat-box">
+              <h4>📅 Recent Activity Summary</h4>
+              <div id="activity-summary" class="stat-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Analytics -->
+        <div class="detailed-analytics">
+          <h3>🔍 Detailed Analytics</h3>
+          <div class="analytics-controls">
+            <select id="analytics-period">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+            <button id="refresh-analytics">🔄 Refresh</button>
+          </div>
+          <div class="analytics-results">
+            <div class="analytics-section">
+              <h4>👥 Member Distribution Rankings</h4>
+              <div id="member-rankings" class="ranking-table"></div>
+            </div>
+            <div class="analytics-section">
+              <h4>🔫 Weapon Distribution Analysis</h4>
+              <div id="weapon-analysis" class="ranking-table"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Database Section -->
+      <section id="database-section" class="app-section">
+        <div class="section-header">
+          <h2>🗄️ Database Management</h2>
+          <div class="quick-stats">
+            <div class="stat-card">
+              <span class="stat-label">Total Records</span>
+              <span class="stat-value" id="total-records">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Database Size</span>
+              <span class="stat-value" id="db-size">0 KB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Database Query Interface -->
+        <div class="db-query-section">
+          <h3>📊 Query Database</h3>
+          <div class="query-controls">
+            <div class="form-row">
+              <select id="query-type">
+                <option value="all">All Records</option>
+                <option value="withdrawals">Withdrawals Only</option>
+                <option value="distributions">Distributions Only</option>
+                <option value="by-member">By Member</option>
+                <option value="by-weapon">By Weapon Type</option>
+                <option value="recent">Recent (Last 30 days)</option>
+                <option value="custom">Custom SQL Query</option>
+              </select>
+              <input
+                type="text"
+                id="filter-value"
+                placeholder="Filter value (if applicable)"
+              />
+              <button id="run-query">🔍 Query</button>
+            </div>
+            <div class="form-row" id="custom-sql-row" style="display: none">
+              <textarea
+                id="custom-sql"
+                placeholder="Enter custom SQL query..."
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Query Results -->
+        <div class="db-results">
+          <h3>📋 Query Results</h3>
+          <div class="results-controls">
+            <button id="export-results">📄 Export Results</button>
+            <button id="delete-selected" class="danger-btn">
+              🗑️ Delete Selected
+            </button>
+          </div>
+          <div id="results-table" class="results-table"></div>
+        </div>
+
+        <!-- Database Actions -->
+        <div class="db-actions">
+          <h3>⚙️ Database Actions</h3>
+          <div class="export-buttons">
+            <button id="backup-db">💾 Backup Database</button>
+            <button id="restore-db">📥 Restore Database</button>
+            <input
+              type="file"
+              id="db-file-input"
+              accept=".db,.sqlite,.json"
+              style="display: none"
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal-overlay">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="modal-title">Confirm Action</h3>
+          <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="modal-message">Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="modal-cancel-btn" class="modal-btn modal-btn-secondary">
+            Cancel
+          </button>
+          <button id="modal-confirm-btn" class="modal-btn modal-btn-primary">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="particles-config.js" defer></script>
+    <script src="faction-manager.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="LSRP Gun & Drug Calculator - Calculate prices for guns and drugs in Los Santos Roleplay"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="lsrp-calculator.css" />
+    <title>LSRP Calculator - opulence.wtf</title>
+    <link rel="icon" href="/assets/images/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/images/favicon.png" />
+
+    <!-- Preload critical assets -->
+    <link
+      rel="preload"
+      href="assets/fonts/JetBrainsMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Defer non-critical scripts -->
+    <script
+      src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"
+      defer
+    ></script>
+  </head>
+  <body>
+    <!-- Particles background with reduced motion preference -->
+    <div id="particles-js" class="particles-container"></div>
+
+    <div id="title">
+      <span>LSRP Calculator</span>
+      <!-- Navigation -->
+      <nav class="site-nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/discord">Discord Bots</a></li>
+          <li>
+            <a href="/lsrp-calculator" class="active">LSRP Calculator</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div
+      id="confirmModal"
+      class="modal"
+      aria-modal="true"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-content">
+        <h3 id="modalTitle">Confirm Action</h3>
+        <p id="modalMessage">Are you sure you want to clear the entire cart?</p>
+        <div class="modal-buttons">
+          <button class="modal-btn confirm-btn" id="confirmBtn">
+            Yes, Clear All
+          </button>
+          <button class="modal-btn cancel-btn" id="cancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification" aria-live="polite">
+      <span id="notificationMessage"></span>
+    </div>
+
+    <div class="calculator-container">
+      <a href="/" class="back-link">← Back to Home</a>
+
+      <div class="calculator-header">
+        <h2>Gun & Drug Price Calculator</h2>
+        <p>Calculate prices for LSRP guns and drugs</p>
+      </div>
+
+      <div class="input-section">
+        <div class="category-selector">
+          <label for="category">Category:</label>
+          <select id="category">
+            <option value="guns">Guns</option>
+            <option value="drugs">Drugs</option>
+          </select>
+        </div>
+
+        <div class="item-selector">
+          <label for="itemType">Item:</label>
+          <select id="itemType">
+            <!-- Options will be populated by JavaScript -->
+          </select>
+        </div>
+
+        <div class="quantity-input">
+          <label for="quantity">Quantity:</label>
+          <input type="text" id="quantity" value="1" placeholder="1" />
+          <span id="unit-display">unit(s)</span>
+        </div>
+
+        <div class="prison-toggle">
+          <label for="prisonPrice">
+            <input type="checkbox" id="prisonPrice" />
+            Prison Prices
+          </label>
+        </div>
+
+        <button type="button" id="addItem" class="add-btn">Add to Cart</button>
+      </div>
+
+      <div class="results-section">
+        <div class="cart-header">
+          <h3>Cart</h3>
+          <button type="button" id="clearAll" class="clear-btn">
+            Clear All
+          </button>
+        </div>
+
+        <div class="cart-table-container">
+          <table id="cartTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+                <th>Prison</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Cart items will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total-section">
+          <div class="discount-section">
+            <label for="discountPercentage">Discount %:</label>
+            <input
+              type="text"
+              id="discountPercentage"
+              value="0"
+              placeholder="0"
+            />
+            <button type="button" id="applyDiscount" class="discount-btn">
+              Apply
+            </button>
+          </div>
+
+          <div class="total-display">
+            <div class="subtotal-row">
+              <span class="subtotal-label">Subtotal:</span>
+              <span id="subtotal">$0.00</span>
+            </div>
+            <div class="discount-row" id="discountRow" style="display: none">
+              <span class="discount-label"
+                >Discount (<span id="discountPercent">0</span>%):</span
+              >
+              <span id="discountAmount">-$0.00</span>
+            </div>
+            <div class="final-total-row">
+              <span class="total-label">Total:</span>
+              <span id="grandTotal">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hostages Button Section -->
+    <div id="bthn" lang="en"></div>
+    <script>
+      (function () {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://bringthemhomenow.net/1.1.0/hostages-ticker.js";
+        script.setAttribute(
+          "integrity",
+          "sha384-DHuakkmS4DXvIW79Ttuqjvl95NepBRwfVGx6bmqBJVVwqsosq8hROrydHItKdsne"
+        );
+        script.setAttribute("crossorigin", "anonymous");
+        document.getElementsByTagName("head")[0].appendChild(script);
+      })();
+    </script>
+    <!-- Hostages Button Section -->
+
+    <footer id="footer">
+      <p>Copyright © 2024, opulenceee.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="config.js" defer></script>
+    <script src="particles-config.js" defer></script>
+    <script src="lsrp-calculator.js" defer></script>
+  </body>
+</html>
