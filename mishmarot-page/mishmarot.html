@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mishmarot - Convert work shift schedules to calendar format">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/mishmarot.css">
+    <title>Mishmarot - Shift Converter</title>
+    <link rel="icon" href="/assets/images/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/images/favicon.png">
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Defer non-critical scripts -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" defer></script>
+</head>
+<body>
+    <!-- Particles background with reduced motion preference -->
+    <div id="particles-js" class="particles-container"></div>
+
+    <div id="title">
+        <span>משמרות.</span>
+        <!-- Navigation -->
+        <nav class="site-nav">
+            <ul>
+                <li><a href="https://opulenceee.wtf">Home</a></li>
+                <li><a href="https://opulenceee.wtf/discord">Discord Bots</a></li>
+                <li><a href="https://opulenceee.wtf/lsrp-calculator">LSRP Calculator</a></li>
+                <li><a href="https://opulenceee.wtf/faction-manager">Faction Manager</a></li>
+            </ul>
+        </nav>
+        <div class="social-icons">
+            <a href="https://buymeacoffee.com/opulenceee" target="_blank" rel="noopener noreferrer">
+                <img src="/assets/images/buymeacoffe.png" alt="Buy Me A Coffee" loading="lazy">
+            </a>
+            <a href="https://www.youtube.com/@opulenceee" target="_blank" rel="noopener noreferrer" aria-label="YouTube Channel">
+                <img src="/assets/images/youtube.png" alt="YouTube" loading="lazy">
+            </a>
+            <a href="https://discordapp.com/users/220880488875687936" target="_blank" rel="noopener noreferrer" aria-label="Discord Profile">
+                <img src="/assets/images/discord.png" alt="Discord" loading="lazy">
+            </a>
+            <a href="https://steamcommunity.com/profiles/76561198097792367/" target="_blank" rel="noopener noreferrer" aria-label="Steam Profile">
+                <img src="/assets/images/steam.png" alt="Steam" loading="lazy">
+            </a>
+            <a href="https://github.com/opulenceee" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile">
+                <img src="/assets/images/github.png" alt="GitHub" loading="lazy">
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="converter-container">
+            <h2>Convert Shift Schedule to Calendar</h2>
+            <p class="description">Upload your Excel shift schedule and convert it to a calendar file (.ics) that you can import into any calendar app.</p>
+            
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Schedule File (Excel or HTML format):</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="file" name="file" required>
+                        <span class="file-upload-text">Choose file...</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Your Name (as it appears in the schedule):</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="month">Month:</label>
+                        <select id="month" name="month" required>
+                            {% for value, name in months %}
+                            <option value="{{ value }}" {% if value == current_month %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Year:</label>
+                        <select id="year" name="year" required>
+                            {% for year in years %}
+                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="convert-btn">Convert to Calendar</button>
+            </form>
+
+            <!-- Loading indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Processing your schedule...</p>
+            </div>
+
+            <!-- Results section -->
+            <div id="results" class="results hidden">
+                <h3>Found Shifts</h3>
+                <div id="shifts-list"></div>
+                <button id="download-btn" class="download-btn">Download Calendar File</button>
+            </div>
+
+            <!-- Error section -->
+            <div id="error" class="error hidden">
+                <h3>Error</h3>
+                <p id="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer id="footer">Copyright © 2024, opulenceee.</footer>
+
+    <!-- Config and main script -->
+    <script src="/particles-config.js" defer></script>
+    <script src="script.js" defer></script>
+</body>
+</html> 

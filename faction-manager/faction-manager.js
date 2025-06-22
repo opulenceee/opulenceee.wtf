@@ -1,88 +1,104 @@
-// Faction Manager with SQLite Database
+// Faction Manager with Server-Side SQLite Database
 class FactionManager {
   constructor() {
-    // Security Configuration
+    // Security Configuration (loaded from server)
     this.config = {
-      password: "SammyG2024!", // Change this password!
+      password: null, // Will be loaded from server
       allowedIPs: [], // Add specific IPs here if needed
       sessionTimeout: 3600000, // 1 hour in milliseconds
+      apiBase: window.location.origin + "/api", // API base URL
     };
 
-    this.db = null;
     this.currentSection = "warehouse";
     this.init();
   }
 
   async init() {
+    await this.loadConfig();
     this.initParticles();
-    await this.initDatabase();
     this.checkSession();
     this.bindEvents();
-    this.updateDashboard();
+    await this.updateDashboard();
   }
 
-  async initDatabase() {
+  // Configuration Loading
+  async loadConfig() {
     try {
-      // Initialize SQL.js
-      const SQL = await initSqlJs({
-        locateFile: (file) =>
-          `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`,
-      });
-
-      // Try to load existing database from localStorage
-      const savedDb = localStorage.getItem("faction_database");
-      if (savedDb) {
-        const data = new Uint8Array(JSON.parse(savedDb));
-        this.db = new SQL.Database(data);
+      const response = await fetch(`${this.config.apiBase}/config`);
+      if (response.ok) {
+        const serverConfig = await response.json();
+        // Merge server config with default config
+        this.config = { ...this.config, ...serverConfig };
       } else {
-        this.db = new SQL.Database();
-        this.createTables();
+        console.warn("Could not load server configuration, using defaults");
+        // Fallback password if server config fails
+        this.config.password = "SammyG2024!";
+      }
+    } catch (error) {
+      console.warn("Error loading configuration:", error);
+      // Fallback password if server config fails
+      this.config.password = "SammyG2024!";
+    }
+  }
+
+  // API Helper Methods
+  async apiRequest(endpoint, method = "GET", data = null) {
+    try {
+      const config = {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (data) {
+        config.body = JSON.stringify(data);
       }
 
-      console.log("Database initialized successfully");
+      const response = await fetch(`${this.config.apiBase}${endpoint}`, config);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "API request failed");
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error("Database initialization failed:", error);
-      this.showNotification("Database initialization failed", "warning");
+      console.error("API request failed:", error);
+      throw error;
     }
   }
 
-  createTables() {
-    // Create withdrawals table
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS withdrawals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        weapon_type TEXT NOT NULL,
-        quantity INTEGER NOT NULL,
-        notes TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Create distributions table
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS distributions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        member_name TEXT NOT NULL,
-        weapon_type TEXT NOT NULL,
-        quantity INTEGER NOT NULL,
-        notes TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    this.saveDatabase();
+  async getWithdrawals() {
+    return await this.apiRequest("/withdrawals");
   }
 
-  saveDatabase() {
-    try {
-      const data = this.db.export();
-      localStorage.setItem(
-        "faction_database",
-        JSON.stringify(Array.from(data))
-      );
-    } catch (error) {
-      console.error("Failed to save database:", error);
-    }
+  async getDistributions() {
+    return await this.apiRequest("/distributions");
+  }
+
+  async addWithdrawal(withdrawalData) {
+    return await this.apiRequest("/withdrawals", "POST", withdrawalData);
+  }
+
+  async addDistribution(distributionData) {
+    return await this.apiRequest("/distributions", "POST", distributionData);
+  }
+
+  async deleteWithdrawal(id) {
+    return await this.apiRequest(`/withdrawals/${id}`, "DELETE");
+  }
+
+  async deleteDistribution(id) {
+    return await this.apiRequest(`/distributions/${id}`, "DELETE");
+  }
+
+  async getStats() {
+    return await this.apiRequest("/stats");
+  }
+
+  async runCustomQuery(sql, params = []) {
+    return await this.apiRequest("/query", "POST", { sql, params });
   }
 
   initParticles() {
@@ -284,7 +300,7 @@ class FactionManager {
     document.getElementById("login-error").textContent = "";
   }
 
-  switchSection(section) {
+  async switchSection(section) {
     document
       .querySelectorAll(".nav-btn")
       .forEach((btn) => btn.classList.remove("active"));
@@ -300,10 +316,10 @@ class FactionManager {
     this.currentSection = section;
 
     if (section === "database") {
-      this.updateDatabaseStats();
-      this.runQuery(); // Show all records by default
+      await this.updateDatabaseStats();
+      await this.runQuery(); // Show all records by default
     } else if (section === "statistics") {
-      this.updateStatistics();
+      await this.updateStatistics();
     }
   }
 
@@ -320,7 +336,7 @@ class FactionManager {
     }
   }
 
-  handleWithdrawal(e) {
+  async handleWithdrawal(e) {
     e.preventDefault();
 
     const weaponType = document.getElementById("gun-type").value;
@@ -328,19 +344,14 @@ class FactionManager {
     const notes = document.getElementById("withdrawal-notes").value;
 
     try {
-      this.db.run(
-        "INSERT INTO withdrawals (weapon_type, quantity, notes) VALUES (?, ?, ?)",
-        [weaponType, quantity, notes]
-      );
-
-      this.saveDatabase();
-      this.addLogEntry("withdrawal", {
+      const withdrawal = await this.addWithdrawal({
         weapon_type: weaponType,
-        quantity,
-        notes,
-        timestamp: new Date().toISOString(),
+        quantity: quantity,
+        notes: notes,
       });
-      this.updateDashboard();
+
+      this.addLogEntry("withdrawal", withdrawal);
+      await this.updateDashboard();
 
       e.target.reset();
       this.showNotification(
@@ -353,7 +364,7 @@ class FactionManager {
     }
   }
 
-  handleDistribution(e) {
+  async handleDistribution(e) {
     e.preventDefault();
 
     const memberDropdown = document.getElementById("member-name").value;
@@ -366,20 +377,15 @@ class FactionManager {
     const notes = document.getElementById("dist-notes").value;
 
     try {
-      this.db.run(
-        "INSERT INTO distributions (member_name, weapon_type, quantity, notes) VALUES (?, ?, ?, ?)",
-        [memberName, weaponType, quantity, notes]
-      );
-
-      this.saveDatabase();
-      this.addLogEntry("distribution", {
+      const distribution = await this.addDistribution({
         member_name: memberName,
         weapon_type: weaponType,
-        quantity,
-        notes,
-        timestamp: new Date().toISOString(),
+        quantity: quantity,
+        notes: notes,
       });
-      this.updateDashboard();
+
+      this.addLogEntry("distribution", distribution);
+      await this.updateDashboard();
 
       e.target.reset();
       this.showNotification(
@@ -433,77 +439,43 @@ class FactionManager {
     }
   }
 
-  updateDashboard() {
+  async updateDashboard() {
     try {
-      // Get total withdrawals
-      const withdrawalResult = this.db.exec(
-        "SELECT SUM(quantity) as total FROM withdrawals"
-      );
-      const totalGuns = withdrawalResult[0]
-        ? withdrawalResult[0].values[0][0] || 0
-        : 0;
-
-      // Get total distributions
-      const distributionResult = this.db.exec(
-        "SELECT SUM(quantity) as total FROM distributions"
-      );
-      const totalDistributed = distributionResult[0]
-        ? distributionResult[0].values[0][0] || 0
-        : 0;
+      const stats = await this.getStats();
 
       document.getElementById("total-guns").textContent =
-        totalGuns.toLocaleString();
+        stats.totalWithdrawals.toLocaleString();
       document.getElementById(
         "total-value"
-      ).textContent = `${totalDistributed.toLocaleString()} distributed`;
+      ).textContent = `${stats.totalDistributions.toLocaleString()} distributed`;
 
-      this.loadRecentEntries();
+      await this.loadRecentEntries();
     } catch (error) {
       console.error("Error updating dashboard:", error);
+      this.showNotification("Error loading dashboard data", "warning");
     }
   }
 
-  loadRecentEntries() {
+  async loadRecentEntries() {
     try {
       // Load recent withdrawals
-      const recentWithdrawals = this.db.exec(
-        "SELECT * FROM withdrawals ORDER BY timestamp DESC LIMIT 10"
-      );
+      const recentWithdrawals = await this.getWithdrawals();
 
-      if (recentWithdrawals[0]) {
-        document.getElementById("withdrawal-log").innerHTML = "";
-        recentWithdrawals[0].values.forEach((row) => {
-          const [id, weapon_type, quantity, notes, timestamp] = row;
-          this.addLogEntry("withdrawal", {
-            weapon_type,
-            quantity,
-            notes,
-            timestamp,
-          });
-        });
-      }
+      document.getElementById("withdrawal-log").innerHTML = "";
+      recentWithdrawals.slice(0, 10).forEach((withdrawal) => {
+        this.addLogEntry("withdrawal", withdrawal);
+      });
 
       // Load recent distributions
-      const recentDistributions = this.db.exec(
-        "SELECT * FROM distributions ORDER BY timestamp DESC LIMIT 10"
-      );
+      const recentDistributions = await this.getDistributions();
 
-      if (recentDistributions[0]) {
-        document.getElementById("distribution-log").innerHTML = "";
-        recentDistributions[0].values.forEach((row) => {
-          const [id, member_name, weapon_type, quantity, notes, timestamp] =
-            row;
-          this.addLogEntry("distribution", {
-            member_name,
-            weapon_type,
-            quantity,
-            notes,
-            timestamp,
-          });
-        });
-      }
+      document.getElementById("distribution-log").innerHTML = "";
+      recentDistributions.slice(0, 10).forEach((distribution) => {
+        this.addLogEntry("distribution", distribution);
+      });
     } catch (error) {
       console.error("Error loading recent entries:", error);
+      this.showNotification("Error loading recent entries", "warning");
     }
   }
 
@@ -517,7 +489,7 @@ class FactionManager {
     }
   }
 
-  runQuery() {
+  async runQuery() {
     const queryType = document.getElementById("query-type").value;
     const filterValue = document.getElementById("filter-value").value;
     const customSql = document.getElementById("custom-sql").value;
@@ -588,23 +560,24 @@ class FactionManager {
     }
 
     try {
-      const result = this.db.exec(sql, params);
-      this.displayQueryResults(result);
+      const results = await this.runCustomQuery(sql, params);
+      this.displayQueryResults(results);
     } catch (error) {
       console.error("Query error:", error);
       this.showNotification(`Query error: ${error.message}`, "warning");
     }
   }
 
-  displayQueryResults(result) {
+  displayQueryResults(results) {
     const tableContainer = document.getElementById("results-table");
 
-    if (!result[0]) {
+    if (!results || results.length === 0) {
       tableContainer.innerHTML = "<p>No results found.</p>";
       return;
     }
 
-    const { columns, values } = result[0];
+    // Get column names from the first result object
+    const columns = Object.keys(results[0]);
 
     let html = '<table class="results-table-element"><thead><tr>';
     html += '<th><input type="checkbox" id="select-all"></th>';
@@ -613,10 +586,10 @@ class FactionManager {
     });
     html += "</tr></thead><tbody>";
 
-    values.forEach((row, index) => {
+    results.forEach((row, index) => {
       html += `<tr><td><input type="checkbox" class="row-select" data-row="${index}"></td>`;
-      row.forEach((cell) => {
-        html += `<td>${cell || ""}</td>`;
+      columns.forEach((col) => {
+        html += `<td>${row[col] || ""}</td>`;
       });
       html += "</tr>";
     });
@@ -631,7 +604,7 @@ class FactionManager {
       });
     });
 
-    this.currentQueryResult = result[0];
+    this.currentQueryResult = { columns, values: results };
   }
 
   exportResults() {
@@ -644,7 +617,7 @@ class FactionManager {
 
     let csv = columns.join(",") + "\n";
     values.forEach((row) => {
-      csv += row.map((cell) => `"${cell || ""}"`).join(",") + "\n";
+      csv += columns.map((col) => `"${row[col] || ""}"`).join(",") + "\n";
     });
 
     this.downloadFile(csv, "query-results.csv", "text/csv");
@@ -670,21 +643,25 @@ class FactionManager {
     }
 
     try {
+      const deletePromises = [];
+
       selectedRows.forEach((checkbox) => {
         const rowIndex = parseInt(checkbox.dataset.row);
         const rowData = this.currentQueryResult.values[rowIndex];
-        const [type, id] = rowData;
+        const type = rowData.type;
+        const id = rowData.id;
 
         if (type === "withdrawal") {
-          this.db.run("DELETE FROM withdrawals WHERE id = ?", [id]);
+          deletePromises.push(this.deleteWithdrawal(id));
         } else if (type === "distribution") {
-          this.db.run("DELETE FROM distributions WHERE id = ?", [id]);
+          deletePromises.push(this.deleteDistribution(id));
         }
       });
 
-      this.saveDatabase();
-      this.runQuery(); // Refresh results
-      this.updateDashboard();
+      await Promise.all(deletePromises);
+
+      await this.runQuery(); // Refresh results
+      await this.updateDashboard();
       this.showNotification(
         `Deleted ${selectedRows.length} records`,
         "success"
@@ -695,91 +672,33 @@ class FactionManager {
     }
   }
 
-  updateDatabaseStats() {
+  async updateDatabaseStats() {
     try {
-      const withdrawalCount = this.db.exec("SELECT COUNT(*) FROM withdrawals");
-      const distributionCount = this.db.exec(
-        "SELECT COUNT(*) FROM distributions"
-      );
+      const [withdrawals, distributions] = await Promise.all([
+        this.getWithdrawals(),
+        this.getDistributions(),
+      ]);
 
-      const totalWithdrawals = withdrawalCount[0]
-        ? withdrawalCount[0].values[0][0]
-        : 0;
-      const totalDistributions = distributionCount[0]
-        ? distributionCount[0].values[0][0]
-        : 0;
-      const totalRecords = totalWithdrawals + totalDistributions;
-
-      const dbSize = new Blob([JSON.stringify(Array.from(this.db.export()))])
-        .size;
+      const totalRecords = withdrawals.length + distributions.length;
 
       document.getElementById("total-records").textContent =
         totalRecords.toLocaleString();
-      document.getElementById("db-size").textContent = `${(
-        dbSize / 1024
-      ).toFixed(1)} KB`;
+      document.getElementById("db-size").textContent = "Server-side DB";
     } catch (error) {
       console.error("Error updating database stats:", error);
     }
   }
 
   backupDatabase() {
-    try {
-      const data = this.db.export();
-      const blob = new Blob([data], { type: "application/octet-stream" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `faction-database-${
-        new Date().toISOString().split("T")[0]
-      }.db`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      this.showNotification("Database backed up successfully", "success");
-    } catch (error) {
-      console.error("Backup error:", error);
-      this.showNotification("Backup failed", "warning");
-    }
+    this.showNotification("Database backup is handled server-side", "info");
   }
 
   restoreDatabase() {
-    document.getElementById("db-file-input").click();
+    this.showNotification("Database restore is handled server-side", "info");
   }
 
   async handleFileRestore(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const confirmed = await this.showModal(
-      "Restore Database",
-      "Restore database from file? This will replace all current data!",
-      true
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-
-      const SQL = await initSqlJs({
-        locateFile: (file) =>
-          `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`,
-      });
-
-      this.db = new SQL.Database(data);
-      this.saveDatabase();
-      this.updateDashboard();
-      this.showNotification("Database restored successfully", "success");
-    } catch (error) {
-      console.error("Restore error:", error);
-      this.showNotification("Restore failed", "warning");
-    }
+    // No longer needed for server-side database
   }
 
   downloadFile(content, filename, contentType) {
@@ -795,196 +714,180 @@ class FactionManager {
   }
 
   // Statistics Methods
-  updateStatistics() {
+  async updateStatistics() {
     try {
-      this.updateQuickStats();
-      this.updateMonthlyOverview();
-      this.updateDetailedAnalytics();
+      await this.updateQuickStats();
+      await this.updateMonthlyOverview();
+      await this.updateDetailedAnalytics();
     } catch (error) {
       console.error("Error updating statistics:", error);
       this.showNotification("Error loading statistics", "warning");
     }
   }
 
-  updateQuickStats() {
-    // Get current month data
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+  async updateQuickStats() {
+    try {
+      const stats = await this.getStats();
 
-    const monthlyDistributions = this.db.exec(
-      `
-      SELECT SUM(quantity) as total FROM distributions 
-      WHERE strftime('%Y-%m', timestamp) = ?
-    `,
-      [currentMonth]
-    );
-
-    const monthlyTotal = monthlyDistributions[0]
-      ? monthlyDistributions[0].values[0][0] || 0
-      : 0;
-
-    // Get top member this month
-    const topMemberQuery = this.db.exec(
-      `
-      SELECT member_name, SUM(quantity) as total FROM distributions 
-      WHERE strftime('%Y-%m', timestamp) = ?
-      GROUP BY member_name 
-      ORDER BY total DESC 
-      LIMIT 1
-    `,
-      [currentMonth]
-    );
-
-    const topMember =
-      topMemberQuery[0] && topMemberQuery[0].values[0]
-        ? topMemberQuery[0].values[0][0]
-        : "-";
-
-    // Get most popular weapon this month
-    const topWeaponQuery = this.db.exec(
-      `
-      SELECT weapon_type, SUM(quantity) as total FROM distributions 
-      WHERE strftime('%Y-%m', timestamp) = ?
-      GROUP BY weapon_type 
-      ORDER BY total DESC 
-      LIMIT 1
-    `,
-      [currentMonth]
-    );
-
-    const topWeapon =
-      topWeaponQuery[0] && topWeaponQuery[0].values[0]
-        ? topWeaponQuery[0].values[0][0]
-        : "-";
-
-    // Update quick stats display
-    document.getElementById(
-      "monthly-total"
-    ).textContent = `${monthlyTotal} guns`;
-    document.getElementById("top-member").textContent = topMember;
-    document.getElementById("top-weapon").textContent = topWeapon;
-  }
-
-  updateMonthlyOverview() {
-    const currentMonth = new Date().toISOString().slice(0, 7);
-
-    // Top Recipients This Month
-    const topRecipientsQuery = this.db.exec(
-      `
-      SELECT member_name, SUM(quantity) as total FROM distributions 
-      WHERE strftime('%Y-%m', timestamp) = ?
-      GROUP BY member_name 
-      ORDER BY total DESC 
-      LIMIT 10
-    `,
-      [currentMonth]
-    );
-
-    this.renderStatList(
-      "top-recipients",
-      topRecipientsQuery[0] ? topRecipientsQuery[0].values : [],
-      "guns"
-    );
-
-    // Most Distributed Weapons This Month
-    const topWeaponsQuery = this.db.exec(
-      `
-      SELECT weapon_type, SUM(quantity) as total FROM distributions 
-      WHERE strftime('%Y-%m', timestamp) = ?
-      GROUP BY weapon_type 
-      ORDER BY total DESC 
-      LIMIT 10
-    `,
-      [currentMonth]
-    );
-
-    this.renderStatList(
-      "top-weapons",
-      topWeaponsQuery[0] ? topWeaponsQuery[0].values : [],
-      "distributed"
-    );
-
-    // Warehouse Activity This Month
-    const warehouseQuery = this.db.exec(
-      `
-      SELECT weapon_type, SUM(quantity) as total FROM withdrawals 
-      WHERE strftime('%Y-%m', timestamp) = ?
-      GROUP BY weapon_type 
-      ORDER BY total DESC 
-      LIMIT 10
-    `,
-      [currentMonth]
-    );
-
-    this.renderStatList(
-      "warehouse-stats",
-      warehouseQuery[0] ? warehouseQuery[0].values : [],
-      "withdrawn"
-    );
-
-    // Recent Activity Summary
-    const recentActivityData = [
-      ["Total Withdrawals", this.getTotalCount("withdrawals", currentMonth)],
-      [
-        "Total Distributions",
-        this.getTotalCount("distributions", currentMonth),
-      ],
-      [
-        "Unique Recipients",
-        this.getUniqueCount("distributions", "member_name", currentMonth),
-      ],
-      [
-        "Weapon Types Used",
-        this.getUniqueCount("distributions", "weapon_type", currentMonth),
-      ],
-    ];
-
-    this.renderStatList("activity-summary", recentActivityData, "");
-  }
-
-  updateDetailedAnalytics() {
-    const period = document.getElementById("analytics-period").value;
-    let whereClause = "";
-    let params = [];
-
-    if (period !== "all") {
-      whereClause = `WHERE datetime(timestamp) >= datetime('now', '-${period} days')`;
+      // Update quick stats display
+      document.getElementById(
+        "monthly-total"
+      ).textContent = `${stats.monthlyTotal} guns`;
+      document.getElementById("top-member").textContent = stats.topMember;
+      document.getElementById("top-weapon").textContent = stats.topWeapon;
+    } catch (error) {
+      console.error("Error updating quick stats:", error);
     }
+  }
 
-    // Member Distribution Rankings
-    const memberRankingsQuery = this.db.exec(
-      `
-      SELECT member_name, SUM(quantity) as total FROM distributions 
-      ${whereClause}
-      GROUP BY member_name 
-      ORDER BY total DESC 
-      LIMIT 20
-    `,
-      params
-    );
+  async updateMonthlyOverview() {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const [distributions, withdrawals] = await Promise.all([
+        this.getDistributions(),
+        this.getWithdrawals(),
+      ]);
 
-    this.renderRankingTable(
-      "member-rankings",
-      memberRankingsQuery[0] ? memberRankingsQuery[0].values : [],
-      "member"
-    );
+      // Filter current month data
+      const monthlyDistributions = distributions.filter((d) =>
+        d.timestamp.startsWith(currentMonth)
+      );
+      const monthlyWithdrawals = withdrawals.filter((w) =>
+        w.timestamp.startsWith(currentMonth)
+      );
 
-    // Weapon Distribution Analysis
-    const weaponAnalysisQuery = this.db.exec(
-      `
-      SELECT weapon_type, SUM(quantity) as total, COUNT(*) as transactions FROM distributions 
-      ${whereClause}
-      GROUP BY weapon_type 
-      ORDER BY total DESC 
-      LIMIT 15
-    `,
-      params
-    );
+      // Top Recipients This Month
+      const recipientStats = this.aggregateByField(
+        monthlyDistributions,
+        "member_name"
+      );
+      this.renderStatList(
+        "top-recipients",
+        recipientStats.slice(0, 10),
+        "guns"
+      );
 
-    this.renderRankingTable(
-      "weapon-analysis",
-      weaponAnalysisQuery[0] ? weaponAnalysisQuery[0].values : [],
-      "weapon"
-    );
+      // Most Distributed Weapons This Month
+      const weaponStats = this.aggregateByField(
+        monthlyDistributions,
+        "weapon_type"
+      );
+      this.renderStatList(
+        "top-weapons",
+        weaponStats.slice(0, 10),
+        "distributed"
+      );
+
+      // Warehouse Activity This Month
+      const warehouseStats = this.aggregateByField(
+        monthlyWithdrawals,
+        "weapon_type"
+      );
+      this.renderStatList(
+        "warehouse-stats",
+        warehouseStats.slice(0, 10),
+        "withdrawn"
+      );
+
+      // Recent Activity Summary
+      const uniqueRecipients = new Set(
+        monthlyDistributions.map((d) => d.member_name)
+      ).size;
+      const uniqueWeapons = new Set(
+        monthlyDistributions.map((d) => d.weapon_type)
+      ).size;
+      const totalWithdrawals = monthlyWithdrawals.reduce(
+        (sum, w) => sum + w.quantity,
+        0
+      );
+      const totalDistributions = monthlyDistributions.reduce(
+        (sum, d) => sum + d.quantity,
+        0
+      );
+
+      const recentActivityData = [
+        ["Total Withdrawals", totalWithdrawals],
+        ["Total Distributions", totalDistributions],
+        ["Unique Recipients", uniqueRecipients],
+        ["Weapon Types Used", uniqueWeapons],
+      ];
+
+      this.renderStatList("activity-summary", recentActivityData, "");
+    } catch (error) {
+      console.error("Error updating monthly overview:", error);
+    }
+  }
+
+  aggregateByField(data, field) {
+    const aggregated = {};
+    data.forEach((item) => {
+      const key = item[field];
+      if (!aggregated[key]) {
+        aggregated[key] = 0;
+      }
+      aggregated[key] += item.quantity;
+    });
+
+    return Object.entries(aggregated)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, total]) => [name, total]);
+  }
+
+  async updateDetailedAnalytics() {
+    try {
+      const period = document.getElementById("analytics-period").value;
+      const distributions = await this.getDistributions();
+
+      // Filter by period
+      let filteredDistributions = distributions;
+      if (period !== "all") {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - parseInt(period));
+        filteredDistributions = distributions.filter(
+          (d) => new Date(d.timestamp) >= cutoffDate
+        );
+      }
+
+      // Member Distribution Rankings
+      const memberStats = this.aggregateByField(
+        filteredDistributions,
+        "member_name"
+      );
+      this.renderRankingTable(
+        "member-rankings",
+        memberStats.slice(0, 20),
+        "member"
+      );
+
+      // Weapon Distribution Analysis
+      const weaponStats = this.aggregateByFieldWithCount(
+        filteredDistributions,
+        "weapon_type"
+      );
+      this.renderRankingTable(
+        "weapon-analysis",
+        weaponStats.slice(0, 15),
+        "weapon"
+      );
+    } catch (error) {
+      console.error("Error updating detailed analytics:", error);
+    }
+  }
+
+  aggregateByFieldWithCount(data, field) {
+    const aggregated = {};
+    data.forEach((item) => {
+      const key = item[field];
+      if (!aggregated[key]) {
+        aggregated[key] = { total: 0, count: 0 };
+      }
+      aggregated[key].total += item.quantity;
+      aggregated[key].count += 1;
+    });
+
+    return Object.entries(aggregated)
+      .sort((a, b) => b[1].total - a[1].total)
+      .map(([name, stats]) => [name, stats.total, stats.count]);
   }
 
   renderStatList(containerId, data, suffix) {
@@ -1045,30 +948,6 @@ class FactionManager {
     });
 
     container.innerHTML = html;
-  }
-
-  getTotalCount(table, month) {
-    const result = this.db.exec(
-      `
-      SELECT SUM(quantity) as total FROM ${table} 
-      WHERE strftime('%Y-%m', timestamp) = ?
-    `,
-      [month]
-    );
-
-    return result[0] ? result[0].values[0][0] || 0 : 0;
-  }
-
-  getUniqueCount(table, column, month) {
-    const result = this.db.exec(
-      `
-      SELECT COUNT(DISTINCT ${column}) as count FROM ${table} 
-      WHERE strftime('%Y-%m', timestamp) = ?
-    `,
-      [month]
-    );
-
-    return result[0] ? result[0].values[0][0] || 0 : 0;
   }
 
   showNotification(message, type = "info") {

@@ -15,7 +15,7 @@
     <!-- Preload critical assets -->
     <link
       rel="preload"
-      href="assets/fonts/JetBrainsMono-Regular.woff2"
+      href="../assets/fonts/JetBrainsMono-Regular.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -26,13 +26,30 @@
       src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"
       defer
     ></script>
-
-    <!-- SQL.js for client-side database -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
   </head>
   <body>
     <!-- Particles background -->
     <div id="particles-js" class="particles-container"></div>
+
+    <!-- Page Title with Navigation - matching other pages -->
+    <div id="title">
+      <span>Faction Manager</span>
+      <!-- Navigation -->
+      <nav class="site-nav">
+        <ul>
+          <li><a href="https://opulenceee.wtf">Home</a></li>
+          <li><a href="https://opulenceee.wtf/discord">Discord Bots</a></li>
+          <li>
+            <a href="https://opulenceee.wtf/lsrp-calculator">LSRP Calculator</a>
+          </li>
+          <li>
+            <a href="https://faction.opulenceee.wtf" class="active"
+              >Faction Manager</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
 
     <!-- Login Screen -->
     <div id="login-screen" class="login-container">

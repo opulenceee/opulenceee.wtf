@@ -82,6 +82,14 @@
   margin: 0 auto;
   width: 100%;
 }
+/* Remove fixed positioning and let the title flow naturally */
+#main-app {
+  margin-top: 0;
+}
+
+.login-container {
+  margin-top: 0;
+}
 
 /* Header */
 .app-header {
@@ -446,6 +454,10 @@
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   #main-app {
+    padding: 1rem;
+  }
+
+  .login-container {
     padding: 1rem;
   }
 
