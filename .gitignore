@@ -2,7 +2,7 @@
 *.env
 config.env
 .env.local
-.env.production
+.env.production 
 
 # Database files
 *.db
