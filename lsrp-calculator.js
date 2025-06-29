@@ -196,6 +196,7 @@ function addItemToCart() {
     category: category.charAt(0).toUpperCase() + category.slice(1),
     name: itemName,
     quantity: quantity,
+    originalQuantity: quantity, // Store the original quantity for the add button
     unit: itemData.unit,
     unitPrice: unitPrice,
     totalPrice: totalPrice,
@@ -213,6 +214,21 @@ function addItemToCart() {
 function removeFromCart(itemId) {
   cart = cart.filter((item) => item.id !== itemId);
   updateCartDisplay();
+}
+
+// Add more quantity to existing cart item
+function addMoreToCart(itemId) {
+  const item = cart.find((cartItem) => cartItem.id === itemId);
+  if (item) {
+    const addQuantity = item.originalQuantity; // Use the original quantity
+    item.quantity += addQuantity;
+    item.totalPrice = item.unitPrice * item.quantity;
+    updateCartDisplay();
+    showNotification(
+      `Added ${addQuantity} more ${item.unit}(s) of ${item.name}!`,
+      "success"
+    );
+  }
 }
 
 // Show clear confirmation modal
@@ -250,14 +266,15 @@ function applyDiscount() {
 
   currentDiscount = discountPercent;
 
-  // Get current subtotal
-  const subtotalText = subtotalElement.textContent.replace(/[$,]/g, "");
-  const subtotal = parseFloat(subtotalText) || 0;
-
-  calculateFinalTotal(subtotal);
+  // Force immediate update of the cart display
+  if (cart.length > 0) {
+    updateCartDisplay();
+  }
 
   if (discountPercent > 0) {
     showNotification(`${discountPercent}% discount applied!`, "success");
+  } else {
+    showNotification("Discount removed!", "success");
   }
 }
 
@@ -404,27 +421,61 @@ function updateCartDisplay() {
   cart.forEach((item, index) => {
     const row = document.createElement("tr");
 
+    // Calculate discounted prices if discount is active
+    const discountMultiplier = (100 - currentDiscount) / 100;
+    const displayUnitPrice = item.unitPrice * discountMultiplier;
+    const displayTotalPrice = item.totalPrice * discountMultiplier;
+
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${item.category}</td>
       <td>${item.name}</td>
       <td>${item.quantity}</td>
-      <td>$${formatNumber(item.unitPrice)}</td>
-      <td>$${formatNumber(item.totalPrice)}</td>
+      <td>${
+        currentDiscount > 0
+          ? `<span class="original-price">$${formatNumber(
+              item.unitPrice
+            )}</span><br><span class="discounted-price">$${formatNumber(
+              displayUnitPrice
+            )}</span>`
+          : `$${formatNumber(displayUnitPrice)}`
+      }</td>
+      <td>${
+        currentDiscount > 0
+          ? `<span class="original-price">$${formatNumber(
+              item.totalPrice
+            )}</span><br><span class="discounted-price">$${formatNumber(
+              displayTotalPrice
+            )}</span>`
+          : `$${formatNumber(displayTotalPrice)}`
+      }</td>
       <td>${
         item.isPrison ? '<span class="prison-indicator">YES</span>' : "NO"
       }</td>
-      <td><button class="remove-btn" onclick="removeFromCart(${
-        item.id
-      })">Remove</button></td>
+      <td class="action-buttons">
+        <button class="add-btn" onclick="addMoreToCart(${
+          item.id
+        })" title="Add ${item.originalQuantity} more">+${
+      item.originalQuantity
+    }</button>
+        <button class="remove-btn" onclick="removeFromCart(${
+          item.id
+        })" title="Remove from cart">Remove</button>
+      </td>
     `;
 
     cartTableBody.appendChild(row);
-    subtotal += item.totalPrice;
+    subtotal += item.totalPrice; // Keep original subtotal for calculations
   });
 
   // Update subtotal
   subtotalElement.textContent = "$" + formatNumber(subtotal);
+
+  // Remove any existing discount note
+  const existingNote = document.querySelector(".discount-note");
+  if (existingNote) {
+    existingNote.remove();
+  }
 
   // Calculate final total with discount
   calculateFinalTotal(subtotal);
@@ -440,6 +491,7 @@ function formatNumber(num) {
 
 // Export functions to global scope for HTML onclick handlers
 window.removeFromCart = removeFromCart;
+window.addMoreToCart = addMoreToCart;
 
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", initCalculator);
